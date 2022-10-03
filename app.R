@@ -30,7 +30,6 @@ MHW_dplyr <- read_csv('MHW_Trends_FULL_Ecoregion_MEOW12NM_Pixels_SmallSize_FullT
                                                  "Bounty and Antipodes Islands","Snares Island","Auckland Island","Campbell Island")),
            Season = factor(season,levels=c("Summer","Autumn","Winter","Spring")),
            Metrics = factor(Metrics,levels=c("Number_MHW_days", "Nevents", "Mean_Intensity", "Maximum_Intensity", "Cumulative_Intensity")))
-##--> To create cf trend script + change here
 
 MHW_trends_FULL <- read_csv('MHW_Trends_FULL_NZBioregion_MEOW12NM_Pixels_FullTS.csv')
 
@@ -61,14 +60,13 @@ factpal <- colorFactor(hcl(seq(15,330,length=12),l = 65, c = 100), coastal_spal_
 
 # To add DOC part
 ## Load Coastal regions DOC
-# MHW_dplyrDOC <- read_csv('MHW_Trends_FULL_Ecoregion_Pixels_SmallSize_DOC_CoastalMarineHabitat_FullTS.csv') %>% 
-#   mutate(Region = factor(Region,levels=c("Kermadec Islands", "Three Kings Islands", "North Eastern",
-#                                          "Western North Island","Eastern North Island","North Cook Strait", 
-#                                          "South Cook Strait","West Coast South Island","East Coast South Island","Chatham Islands","Southland",
-#                                          "Fiordland","Snares Islands","Subantarctic Islands")),
-#          Season = factor(season,levels=c("Summer","Autumn","Winter","Spring")),
-#          Metrics = factor(Metrics,levels=c("Number_MHW_days", "Nevents", "Mean_Intensity", "Maximum_Intensity", "Cumulative_Intensity")))
-# 
+MHW_dplyrDOC <- read_csv('MHW_Trends_FULL_NZ_DOC_CoastalMarineHabitat_SmallSize_FullTS_Omly8regions.csv') %>%
+  mutate(Region = factor(Region,levels=c("Western North Island","Eastern North Island","North Cook Strait",
+                                         "South Cook Strait","West Coast South Island","East Coast South Island",
+                                         "Southland","Fiordland")),
+         Season = factor(season,levels=c("Summer","Autumn","Winter","Spring")),
+         Metrics = factor(Metrics,levels=c("Number_MHW_days", "Nevents", "Mean_Intensity", "Maximum_Intensity", "Cumulative_Intensity")))
+
 # 
 # coastalmarinehab <- st_read('14_Coastal_NZ_Biogeographic_Regions_12nm.shp') %>% 
 #   mutate(Region = factor(Region,levels=c("Kermadec Islands", "Three Kings Islands", "North Eastern",
@@ -76,7 +74,10 @@ factpal <- colorFactor(hcl(seq(15,330,length=12),l = 65, c = 100), coastal_spal_
 #                                          "South Cook Strait","West Coast South Island","East Coast South Island","Chatham Islands","Southland",
 #                                          "Fiordland","Snares Islands","Subantarctic Islands")))
 
-
+MHW_DOC_trends_FULL <- read_csv('MHW_Trends_FULL_NZ_DOC_CoastalMarineHabitat_clean_FullTS_Only8regions.csv') %>% 
+    mutate(Region_Name = factor(Region_Name,levels=c("Western North Island","Eastern North Island","North Cook Strait",
+                                           "South Cook Strait","West Coast South Island","East Coast South Island","Southland",
+                                           "Fiordland")))
 
 ## Load coastline
 #coast <- ne_coastline(scale = "medium", returnclass = "sf") %>% 
@@ -122,7 +123,7 @@ ui <- fluidPage(
                tabPanel("Trends explorer MEOW",
                         fluidRow(
                             column(3,
-                                   selectInput("ecoregion", "Ecoregion", c("Kermadec Island", "Three Kings-North Cape", "Northeastern New Zealand",
+                                   selectInput("ecoregion", "MEOW Ecoregion", c("Kermadec Island", "Three Kings-North Cape", "Northeastern New Zealand",
                                                                            "Central New Zealand","Chatham Island","South New Zealand", 
                                                                            "Bounty and Antipodes Islands","Snares Island","Auckland Island","Campbell Island"), 
                                                selected='Kermadec Island',multiple=F)
@@ -153,24 +154,24 @@ ui <- fluidPage(
                #          add_busy_spinner(timeout=1000,color='blue')
                # ),
                # 
-               # tabPanel("Trends explorer DOC",
-               #          fluidRow(
-               #            column(3,
-               #                   selectInput("ecoregion", "Ecoregion", c("Kermadec Island", "Three Kings-North Cape", "Northeastern New Zealand",
-               #                                                           "Central New Zealand","Chatham Island","South New Zealand", 
-               #                                                           "Bounty and Antipodes Islands","Snares Island","Auckland Island","Campbell Island"), 
-               #                               selected='Kermadec Island',multiple=F)
-               #            )
-               #          ),
-               #          ##plotlyOutput("trendplot", width="100%", height="100%"),
-               #          #plotlyOutput("trendplot", width=800, height=800),
-               #          
-               #          #plotlyOutput("trendplot", width="auto", height="auto"),
-               #          hr(),
-               #          DT::dataTableOutput("table")
-               #          #dataTableOutput("table")
-               #          
-               # ),
+               tabPanel("Trends explorer DOC",
+                        fluidRow(
+                          column(3,
+                                 selectInput("bioregion", "DOC Coastal Region", c("Western North Island","Eastern North Island","North Cook Strait",
+                                                                                  "South Cook Strait","West Coast South Island","East Coast South Island",
+                                                                                  "Southland","Fiordland"),
+                                             selected='Western North Island',multiple=F)
+                          )
+                        ),
+                        ##plotlyOutput("trendplot", width="100%", height="100%"),
+                        plotlyOutput("trendplotDOC", width=800, height=800),
+
+                        #plotlyOutput("trendplot", width="auto", height="auto"),
+                        hr(),
+                        DT::dataTableOutput("table2")
+                        #dataTableOutput("table")
+
+               ),
                               
                conditionalPanel("false", icon("crosshair"))
     )
@@ -302,6 +303,31 @@ server <- function(input, output) {
             orientation = "h", x = 0.4, y = -0.2))
     })
     
+    MHW_dplyr_DOC <- reactive({
+      MHW_dplyrDOC %>% 
+        dplyr::filter(Region==input$bioregion)
+      
+    })
+    
+    output$trendplotDOC <- renderPlotly({    
+      p <- ggplot(MHW_dplyr_DOC(),aes(year,values,col=season)) + 
+        facet_wrap(vars(Metrics),scales='free',ncol=3,labeller = as_labeller(metrics.labs)) + 
+        geom_line(size=.5) + 
+        geom_smooth(se=T,size=1.5) + 
+        ylab('') + xlab('Year') + 
+        scale_colour_viridis(begin = 0, end = .75,option="inferno",discrete = T) +
+        theme_bw() + 
+        theme(legend.position="bottom",
+              legend.title = element_text(size=16),
+              legend.text = element_text(size=16),
+              strip.text = element_text(size=12), 
+              axis.text=element_text(size=12),
+              axis.title = element_text(size=16))+
+        guides(colour = guide_legend(override.aes = list(shape=15,size=8)))
+      ggplotly(p) %>% layout(legend = list(
+        orientation = "h", x = 0.4, y = -0.2))
+    })
+    
     ## Stats Table ###########################################
     MHW_Trends_realm <- reactive({
         MHW_Trends %>% 
@@ -320,7 +346,23 @@ server <- function(input, output) {
                                             formatRound(c(5,6,8:12), 4) %>% 
                                             formatStyle(columns = c(1:12), 'text-align' = 'center')
                                         )
-        
+    MHW_DOC_Trends <- reactive({
+      MHW_DOC_trends_FULL %>% 
+        dplyr::filter(Region_Name==input$bioregion) 
+    })
+    
+    output$table2 <- DT::renderDataTable(datatable(MHW_DOC_Trends(),
+                                                  options = list(
+                                                  pageLength = 30)) %>% 
+                                          DT::formatStyle('P_Value',target = 'row',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
+                                          DT::formatStyle('P_Value_pre',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
+                                          DT::formatStyle('P_Value_post',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
+                                          DT::formatStyle('Trend_Decadal',target = 'row',backgroundColor = styleInterval(0, c('lightblue', 'lightpink'))) %>%
+                                          DT::formatStyle('Trend_Decadal_pre',target = 'cell',backgroundColor = styleInterval(0, c('lightblue', 'lightpink'))) %>%
+                                          DT::formatStyle('Trend_Decadal_post',target = 'cell',backgroundColor = styleInterval(0, c('lightblue', 'lightpink'))) %>%
+                                          formatRound(c(5,6,8:12), 4) %>%
+                                          formatStyle(columns = c(1:12), 'text-align' = 'center')
+    )    
     
 }
 
