@@ -5,9 +5,9 @@ account: frantoto
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6904548
-bundleId: 6362668
+bundleId: 6558536
 url: https://frantoto.shinyapps.io/Coastal_Seasonal_MHWs_NZ/
-when: 1664772940.41158
-lastSyncTime: 1664772940.41158
+when: 1669523915.52211
+lastSyncTime: 1669523915.52213
 asMultiple: FALSE
 asStatic: FALSE

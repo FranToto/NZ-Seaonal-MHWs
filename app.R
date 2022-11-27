@@ -74,10 +74,15 @@ MHW_dplyrDOC <- read_csv('MHW_Trends_FULL_NZ_DOC_CoastalMarineHabitat_SmallSize_
 #                                          "South Cook Strait","West Coast South Island","East Coast South Island","Chatham Islands","Southland",
 #                                          "Fiordland","Snares Islands","Subantarctic Islands")))
 
-MHW_DOC_trends_FULL <- read_csv('MHW_Trends_FULL_NZ_DOC_CoastalMarineHabitat_clean_FullTS_Only8regions.csv') %>% 
-    mutate(Region_Name = factor(Region_Name,levels=c("Western North Island","Eastern North Island","North Cook Strait",
-                                           "South Cook Strait","West Coast South Island","East Coast South Island","Southland",
-                                           "Fiordland")))
+# MHW_DOC_trends_FULL <- read_csv('MHW_Trends_FULL_NZ_DOC_CoastalMarineHabitat_clean_FullTS_Only8regions.csv') %>% 
+#     mutate(Region_Name = factor(Region_Name,levels=c("Western North Island","Eastern North Island","North Cook Strait",
+#                                            "South Cook Strait","West Coast South Island","East Coast South Island","Southland",
+#                                            "Fiordland")))
+# Include modif MK test p-value
+MHW_DOC_trends_FULL <- read_csv('MHW_Trends_FULL_NZBioregion_DOC12NM_Merge_ModifMKtest.csv') %>% 
+  mutate(Region_Name = factor(Region_Name,levels=c("Western North Island","Eastern North Island","North Cook Strait",
+                                                   "South Cook Strait","West Coast South Island","East Coast South Island","Southland",
+                                                   "Fiordland")))
 
 ## Load coastline
 #coast <- ne_coastline(scale = "medium", returnclass = "sf") %>% 
@@ -97,7 +102,9 @@ metrics.labs <- c(`Cumulative_Intensity` = "Cumulative Intensity (DegC Days)",
 ##
 
 ## Load Trends
-MHW_Trends <- read_csv('MHW_Trends_FULL_NZBioregion_MEOW12NM_Pixels_clean_FullTS.csv') #Contains output of trend analysis (Slope, breakpoint, p-values) - for global and NZ
+#MHW_Trends <- read_csv('MHW_Trends_FULL_NZBioregion_MEOW12NM_Pixels_clean_FullTS.csv') #Contains output of trend analysis (Slope, breakpoint, p-values) - for global and NZ
+# Using MOdifMK test
+MHW_Trends <- read_csv('MHW_Trends_FULL_NZBioregion_MEOW12NM_Merge_ModifMKtest.csv') #Contains output of trend analysis (Slope, breakpoint, p-values) - for global and NZ
 
 
 ##
@@ -337,7 +344,7 @@ server <- function(input, output) {
     output$table <- DT::renderDataTable(datatable(MHW_Trends_realm(),
                                                   options = list(
                                                       pageLength = 30)) %>% 
-                                            DT::formatStyle('P_Value',target = 'row',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
+                                            DT::formatStyle('P_Value_ModifMK',target = 'row',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%#Instead of P_Value, i.e. normal MK test
                                             DT::formatStyle('P_Value_pre',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
                                             DT::formatStyle('P_Value_post',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
                                             DT::formatStyle('Trend_Decadal',target = 'row',backgroundColor = styleInterval(0, c('lightblue', 'lightpink'))) %>% 
@@ -354,7 +361,7 @@ server <- function(input, output) {
     output$table2 <- DT::renderDataTable(datatable(MHW_DOC_Trends(),
                                                   options = list(
                                                   pageLength = 30)) %>% 
-                                          DT::formatStyle('P_Value',target = 'row',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
+                                          DT::formatStyle('P_Value_ModifMK',target = 'row',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%#Instead of P_Value, i.e. normal MK test
                                           DT::formatStyle('P_Value_pre',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
                                           DT::formatStyle('P_Value_post',target = 'cell',fontWeight = styleInterval(.05, c('bold', 'normal'))) %>%
                                           DT::formatStyle('Trend_Decadal',target = 'row',backgroundColor = styleInterval(0, c('lightblue', 'lightpink'))) %>%
